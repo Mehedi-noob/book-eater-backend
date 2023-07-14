@@ -17,7 +17,7 @@ app.use('/api/v1', routes);
 // Welcome api
 app.get('/', async (req: Request, res: Response) => {
   res.status(200).json({
-    message: 'Welcome To sirajganj cow seller',
+    message: 'Welcome To The Book Eater',
   });
 });
 
