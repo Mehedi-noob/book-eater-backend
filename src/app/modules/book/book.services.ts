@@ -4,8 +4,8 @@ import {
   GenericResponseType,
   PaginationOptionType,
 } from '../../../interface/common';
-import { cowSearchableFields } from './cow.constant';
-import { CowFilterType, CowType } from './cow.interface';
+import { cowSearchableFields } from './book.constant';
+import { CowFilterType, CowType } from './book.interface';
 import { Cow } from './cow.model';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';

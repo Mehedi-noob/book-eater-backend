@@ -1,7 +1,7 @@
 import express from 'express';
 import { UserRoutes } from '../modules/user/user.route';
 import { AuthRoutes } from '../modules/auth/auth.route';
-import { CowRoutes } from '../modules/cow/cow.route';
+import { CowRoutes } from '../modules/book/cow.route';
 const router = express.Router();
 
 // Defining an array of module routes to be mounted on the router
