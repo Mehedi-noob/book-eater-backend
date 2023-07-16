@@ -1,55 +1,34 @@
 import { z } from 'zod';
-import { breed, category, location } from './book.constant';
-
-const createCowZodSchema = z.object({
+import { genre } from './book.constant';
+const createBookZodSchema = z.object({
   body: z.object({
-    name: z.string({
-      required_error: 'name is required',
+    title: z.string({
+      required_error: 'title is required',
     }),
-    age: z
-      .number({
-        required_error: 'age is required',
-      })
-      .positive(),
-    price: z
-      .number({
-        required_error: 'price is required',
-      })
-      .positive(),
-    weight: z
-      .number({
-        required_error: 'weight is required',
-      })
-      .positive(),
-    location: z.enum([...location] as [string, ...string[]], {
+    author: z.string({
+      required_error: 'author is required',
+    }),
+    genre: z.enum([...genre] as [string, ...string[]], {
       required_error: 'location is required',
     }),
-    breed: z.enum([...breed] as [string, ...string[]], {
-      required_error: 'breed is required',
-    }),
-    category: z.enum([...category] as [string, ...string[]], {
-      required_error: 'category is required',
-    }),
-    seller: z.string({
-      required_error: 'seller is required',
+    publicationDate: z.string({
+      required_error: 'publication date is required',
     }),
   }),
 });
 
-const updateCowZodSchema = z.object({
+const updateBookZodSchema = z.object({
   body: z.object({
-    name: z.string().optional(),
-    age: z.number().positive().optional(),
-    price: z.number().positive().optional(),
-    weight: z.number().positive().optional(),
-    location: z.enum([...location] as [string, ...string[]]).optional(),
-    breed: z.enum([...breed] as [string, ...string[]]).optional(),
-    category: z.enum([...category] as [string, ...string[]]).optional(),
+    title: z.string().optional(),
+    author: z.string().optional(),
+    genre: z.string().optional(),
+    publicationDate: z.string().optional(),
+    location: z.enum([...genre] as [string, ...string[]]).optional(),
     seller: z.string().optional(),
   }),
 });
 
-export const CowValidation = {
-  createCowZodSchema,
-  updateCowZodSchema,
+export const BookValidation = {
+  createBookZodSchema,
+  updateBookZodSchema,
 };

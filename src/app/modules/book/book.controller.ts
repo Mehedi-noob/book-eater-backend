@@ -2,121 +2,127 @@ import { RequestHandler } from 'express';
 import httpStatus from 'http-status';
 import sendResponse from '../../../shared/sendResponse';
 import catchAsync from '../../../shared/catchAsync';
-import { CowType } from './book.interface';
-import { CowService } from './cow.services';
+import { BookType } from './book.interface';
+import { BookService } from './book.services';
 import pick from '../../../shared/pick';
-import { cowFilterableField } from './book.constant';
+import { bookFilterableField } from './book.constant';
 import { paginationFields } from '../../../constants/pagination';
 import ApiError from '../../../errors/ApiError';
 import { UserService } from '../user/user.services';
 import { User } from '../user/user.model';
 
-const createNewCowController: RequestHandler = catchAsync(async (req, res) => {
-  const { ...cowData } = req.body;
+const createNewBookController: RequestHandler = catchAsync(async (req, res) => {
+  const { ...bookData } = req.body;
+  bookData.seller = req?.auth?._id;
+  const result = await BookService.createBook(bookData);
 
-  const result = await CowService.createCow(cowData);
-
-  return sendResponse<CowType>(res, {
+  return sendResponse<BookType>(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: 'Cow created successfully',
+    message: 'Book created successfully',
     meta: null,
     data: result,
   });
 });
 
-const getAllCowsController: RequestHandler = catchAsync(async (req, res) => {
+const getAllBooksController: RequestHandler = catchAsync(async (req, res) => {
   // for filtering according to query
-  const filters = pick(req.query, cowFilterableField);
+  const filters = pick(req.query, bookFilterableField);
 
   // pagination
   const paginationOptions = pick(req.query, paginationFields);
 
   // original service call
-  const result = await CowService.getAllCows(filters, paginationOptions);
+  const result = await BookService.getAllBooks(filters, paginationOptions);
 
   // sending response according to filter and pagination
-  return sendResponse<CowType[]>(res, {
+  return sendResponse<BookType[]>(res, {
     statusCode: httpStatus.FOUND,
     success: true,
-    message: 'Cows retrieved successfully',
+    message: 'Books retrieved successfully',
     meta: result.meta,
     data: result.data,
   });
 });
 
-const getCowByIdController: RequestHandler = catchAsync(async (req, res) => {
+const getBookByIdController: RequestHandler = catchAsync(async (req, res) => {
   const id = req.params.id;
 
   // original service call
-  const result = await CowService.getSingleCow(id);
+  const result = await BookService.getSingleBook(id);
 
   // scallable response sending according to req
-  return sendResponse<CowType>(res, {
+  return sendResponse<BookType>(res, {
     statusCode: httpStatus.FOUND,
     success: true,
-    message: 'Cow retrieved successfully',
+    message: 'Book retrieved successfully',
     meta: null,
     data: result,
   });
 });
 
-const updateCowByIdController: RequestHandler = catchAsync(async (req, res) => {
-  // data retrieval according to req
-  const id = req.params.id;
-  const updatedData = req.body;
+const updateBookByIdController: RequestHandler = catchAsync(
+  async (req, res) => {
+    // data retrieval according to req
+    const id = req.params.id;
+    const updatedData = req.body;
 
-  // original service call
-  if (req?.auth?.role === 'seller') {
-    // get the cowInfo
-    const cowInfo = await CowService.getSingleCow(id);
+    // original service call
+    if (req?.auth?.role === 'seller') {
+      // get the BookInfo
+      const BookInfo = await BookService.getSingleBook(id);
+      console.log('book', BookInfo);
+      console.log('author', req.auth._id);
 
-    if (cowInfo?.seller !== req?.auth?._id) {
-      throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
+      if (BookInfo?.seller.toString() !== req?.auth?._id) {
+        throw new ApiError(httpStatus.FORBIDDEN, 'You are not the seller');
+      }
     }
+
+    const result = await BookService.updateSingleBook(id, updatedData);
+    // scallable response sending according to req
+    return sendResponse<BookType>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Book updated successfully',
+      meta: null,
+      data: result,
+    });
   }
+);
 
-  const result = await CowService.updateSingleCow(id, updatedData);
-  // scallable response sending according to req
-  return sendResponse<CowType>(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: 'Cow updated successfully',
-    meta: null,
-    data: result,
-  });
-});
+const deleteBookByIdController: RequestHandler = catchAsync(
+  async (req, res) => {
+    // data retrieval according to req
+    const id = req.params.id;
 
-const deleteCowByIdController: RequestHandler = catchAsync(async (req, res) => {
-  // data retrieval according to req
-  const id = req.params.id;
+    if (req?.auth?.role === 'seller') {
+      // get the BookInfo
+      const BookInfo = await BookService.getSingleBook(id);
 
-  if (req?.auth?.role === 'seller') {
-    // get the cowInfo
-    const cowInfo = await CowService.getSingleCow(id);
-
-    if (cowInfo?.seller !== req?.auth?._id) {
-      throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
+      if (BookInfo?.seller.toString() !== req?.auth?._id) {
+        throw new ApiError(httpStatus.FORBIDDEN, 'You are not the seller');
+      }
     }
+
+    // original service call
+    const result = await BookService.deleteSingleBook(id);
+
+    // scallable response sending according to req
+    return sendResponse<BookType>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Book delete successfully',
+      meta: null,
+      data: result,
+    });
   }
+);
 
-  // original service call
-  const result = await CowService.deleteSingleCow(id);
-
-  // scallable response sending according to req
-  return sendResponse<CowType>(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: 'Cow delete successfully',
-    meta: null,
-    data: result,
-  });
-});
-
-export const CowController = {
-  createNewCowController,
-  getAllCowsController,
-  getCowByIdController,
-  updateCowByIdController,
-  deleteCowByIdController,
+export const BookController = {
+  createNewBookController,
+  getAllBooksController,
+  getBookByIdController,
+  updateBookByIdController,
+  deleteBookByIdController,
 };

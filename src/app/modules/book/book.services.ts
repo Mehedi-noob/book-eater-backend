@@ -4,35 +4,34 @@ import {
   GenericResponseType,
   PaginationOptionType,
 } from '../../../interface/common';
-import { cowSearchableFields } from './book.constant';
-import { CowFilterType, CowType } from './book.interface';
-import { Cow } from './cow.model';
+import { bookSearchableFields } from './book.constant';
+import { BookFilterType, BookType } from './book.interface';
+import { Book } from './book.model';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { User } from '../user/user.model';
 
-const createCow = async (cow: CowType): Promise<CowType | null> => {
-  const isSellerExist = await User.findById(cow.seller);
+const createBook = async (book: BookType): Promise<BookType | null> => {
+  const isSellerExist = await User.findById(book.seller);
   if (!isSellerExist) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Seller not found!');
   }
-  cow.label = 'for sale';
-  const result = (await Cow.create(cow)).populate('seller');
+  const result = await Book.create(book);
 
   return result;
 };
 
-const getAllCows = async (
-  filters: CowFilterType,
+const getAllBooks = async (
+  filters: BookFilterType,
   paginationOptions: PaginationOptionType
-): Promise<GenericResponseType<CowType[]>> => {
+): Promise<GenericResponseType<BookType[]>> => {
   const { searchTerm, ...filtersData } = filters;
   const andCondition = [];
 
   // Generating partial search mechanism
   if (searchTerm) {
     andCondition.push({
-      $or: cowSearchableFields.map(field => ({
+      $or: bookSearchableFields.map(field => ({
         [field]: {
           $regex: searchTerm,
           $options: 'i',
@@ -83,13 +82,13 @@ const getAllCows = async (
 
   const whereConditions = andCondition.length > 0 ? { $and: andCondition } : {};
 
-  const result = await Cow.find(whereConditions)
-    .populate('seller')
+  const result = await Book.find(whereConditions)
+
     .sort(sortConditions)
     .skip(skip)
     .limit(limit);
 
-  const total = await Cow.countDocuments(whereConditions);
+  const total = await Book.countDocuments(whereConditions);
 
   return {
     meta: {
@@ -101,20 +100,20 @@ const getAllCows = async (
   };
 };
 
-const getSingleCow = async (id: string): Promise<CowType | null> => {
-  const result = await Cow.findById(id).populate('seller');
+const getSingleBook = async (id: string): Promise<BookType | null> => {
+  const result = await Book.findById(id);
 
   return result;
 };
 
-const updateSingleCow = async (
+const updateSingleBook = async (
   id: string,
-  payload: Partial<CowType>
-): Promise<CowType | null> => {
-  const isExist = await Cow.findById(id);
+  payload: Partial<BookType>
+): Promise<BookType | null> => {
+  const isExist = await Book.findById(id);
 
   if (!isExist) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Cow not found!');
+    throw new ApiError(httpStatus.NOT_FOUND, 'Book not found!');
   }
 
   if (payload?.seller) {
@@ -124,28 +123,28 @@ const updateSingleCow = async (
     }
   }
 
-  const { ...cowData } = payload;
+  const { ...bookData } = payload;
 
-  const updatedCowData: Partial<CowType> = { ...cowData };
+  const updatedBookData: Partial<BookType> = { ...bookData };
 
-  const result = await Cow.findOneAndUpdate({ _id: id }, updatedCowData, {
+  const result = await Book.findOneAndUpdate({ _id: id }, updatedBookData, {
     new: true, // Return the updated document
     runValidators: true, // Run validators during the update operation
-  }).populate('seller');
+  });
 
   return result;
 };
 
-const deleteSingleCow = async (id: string): Promise<CowType | null> => {
-  const result = await Cow.findByIdAndDelete(id).populate('seller');
+const deleteSingleBook = async (id: string): Promise<BookType | null> => {
+  const result = await Book.findByIdAndDelete(id);
 
   return result;
 };
 
-export const CowService = {
-  createCow,
-  getAllCows,
-  getSingleCow,
-  updateSingleCow,
-  deleteSingleCow,
+export const BookService = {
+  createBook,
+  getAllBooks,
+  getSingleBook,
+  updateSingleBook,
+  deleteSingleBook,
 };
