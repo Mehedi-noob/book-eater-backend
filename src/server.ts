@@ -1,40 +1,41 @@
 import mongoose from 'mongoose';
+import configs from './config';
 import app from './app';
-import config from './config';
 import { Server } from 'http';
 
+// Handling uncaught exceptions
 process.on('uncaughtException', error => {
-  // error logger
   console.log(error);
   process.exit(1);
 });
 
 let server: Server;
 
-// database connection
 async function bootstrap() {
   try {
-    await mongoose.connect(config.database_url as string);
-    console.log('Book Eater Database is connected successfully 😩');
+    await mongoose.connect(configs.db_url as string);
+    console.log('Database connection established');
 
-    app.listen(config.port, () => {
-      console.log(`Book Eater Application listening on port ${config.port}`);
+    server = app.listen(configs.port, () => {
+      console.log(
+        `Server is running on port ${configs.port}`
+      );
     });
   } catch (error) {
-    console.log('Failed to connect database 😭😭😭', error);
+    console.log('Failed to connect to database', error);
   }
-
-  // can you find a way to let me down(server) slowly,
+  // Gracefully shutting down the server in case of unhandled rejection
   process.on('unhandledRejection', error => {
+    console.log(error);
+
     if (server) {
-      // close and logging error
+      // Close the server and log the error
       server.close(() => {
-        // error logger
         console.log(error);
         process.exit(1);
       });
     } else {
-      // If server is unavailable, the process will exit
+      // If server is not available, exit the process
       process.exit(1);
     }
   });
@@ -42,13 +43,11 @@ async function bootstrap() {
 
 bootstrap();
 
-/** SIGTERM
- This maal is used to request termination of a process
- */
+// Handling SIGTERM signal
 process.on('SIGTERM', () => {
-  // logger.info('SIGTERM is received');
-  console.log('SIGTERM is received');
+  console.log('SIGTERM is received.');
   if (server) {
+    // Close the server gracefully
     server.close();
   }
 });

@@ -1,25 +1,17 @@
 import mongoose from 'mongoose';
-import { GenericErrorResponseType } from '../interface/common';
-import { GenericErrorMessageType } from '../interface/error';
-import httpStatus from 'http-status';
+import { IGenericErrorMessage } from '../interfaces/error';
 
-const handleCastError = (
-  error: mongoose.Error.CastError // Mongoose cast error has it's own type
-): GenericErrorResponseType => {
-  // Extract the error messages from the validation error
-  const errors: GenericErrorMessageType[] = [
+export const handleCastError = (error: mongoose.Error.CastError) => {
+  const errors: IGenericErrorMessage[] = [
     {
       path: error.path,
       message: 'Invalid Id',
     },
   ];
-
-  const statusCode: number = httpStatus.BAD_REQUEST;
+  const statusCode = 400;
   return {
     statusCode,
-    message: 'Cast Error',
-    errorMessages: errors,
+    message: 'Cast error',
+    errorMessage: errors,
   };
 };
-
-export default handleCastError;

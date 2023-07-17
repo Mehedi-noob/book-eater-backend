@@ -1,124 +1,96 @@
 import { RequestHandler } from 'express';
-import { UserType } from './user.interface';
-import httpStatus from 'http-status';
-import sendResponse from '../../../shared/sendResponse';
 import catchAsync from '../../../shared/catchAsync';
-import { UserService } from './user.services';
-import pick from '../../../shared/pick';
-import { userFilterableField } from './user.constant';
+import sendResponse from '../../../shared/sendResponse';
+import { IUser } from './user.interface';
+import httpStatus from 'http-status';
+import { UserService } from './user.service';
+import { pick } from '../../../shared/pick';
+import { UserFilterableFields } from './user.constants';
 import { paginationFields } from '../../../constants/pagination';
 
-const getAllUsers: RequestHandler = catchAsync(async (req, res) => {
-  // filteration
-  const filters = pick(req.query, userFilterableField);
-
-  // pagination
+const getAllUser: RequestHandler = catchAsync(async (req, res) => {
+  const filters = pick(req.query, UserFilterableFields);
   const paginationOptions = pick(req.query, paginationFields);
 
-  // original service call
   const result = await UserService.getAllUsers(filters, paginationOptions);
-
-  // scallable response sending according to req
-  return sendResponse<UserType[]>(res, {
-    statusCode: httpStatus.FOUND,
+  sendResponse<IUser[]>(res, {
+    statusCode: httpStatus.OK,
     success: true,
-    message: 'Users retrieved successfully',
+    message: 'users retrived successfully',
     meta: result.meta,
     data: result.data,
   });
 });
 
-const getUser: RequestHandler = catchAsync(async (req, res) => {
+const getSingleUser: RequestHandler = catchAsync(async (req, res) => {
   const id = req.params.id;
-
-  // original service call
   const result = await UserService.getSingleUser(id);
 
-  // scallable response sending according to req
-  return sendResponse<UserType>(res, {
-    statusCode: httpStatus.FOUND,
+  sendResponse<IUser>(res, {
+    statusCode: httpStatus.OK,
     success: true,
-    message: 'User retrieved successfully',
-    meta: null,
+    message: 'user retrived successfully',
     data: result,
   });
 });
 
-const updateUserById: RequestHandler = catchAsync(async (req, res) => {
-  // data retrieval according to req
+const updateUser: RequestHandler = catchAsync(async (req, res) => {
   const id = req.params.id;
-  const updatedData = req.body;
+  const updateData = req.body;
 
-  // original service call
-  const result = await UserService.updateSingleUser(id, updatedData);
+  const result = await UserService.updateUser(id, updateData);
 
-  // scallable response sending according to req
-  return sendResponse<UserType>(res, {
+  sendResponse<IUser>(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'User updated successfully',
-    meta: null,
+    message: 'user updated successfully',
     data: result,
   });
 });
 
-const deleteUserById: RequestHandler = catchAsync(async (req, res) => {
-  // data retrieval according to req
+const deleteUser: RequestHandler = catchAsync(async (req, res) => {
   const id = req.params.id;
+  const result = await UserService.deleteUser(id);
 
-  // original service call
-  const result = await UserService.deleteSingleUser(id);
-
-  // scallable response sending according to req
-  return sendResponse<UserType>(res, {
+  sendResponse<IUser>(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'User delete successfully',
-    meta: null,
+    message: 'user deleted successfully',
     data: result,
   });
 });
 
-// my profile section
-const updateMyprofile: RequestHandler = catchAsync(async (req, res) => {
-  // data retrieval according to req
-  const id = req?.auth?._id;
-  const updatedData = req.body;
+const getMyProfile: RequestHandler = catchAsync(async (req, res) => {
+  const user = req.user;
+  const result = await UserService.getMyProfile(user);
 
-  // original service call
-  const result = await UserService.updateSingleUser(id, updatedData);
-
-  // scallable response sending according to req
-  return sendResponse<UserType>(res, {
+  sendResponse<IUser>(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'User updated successfully',
-    meta: null,
+    message: "User's information retrieved successfully",
     data: result,
   });
 });
 
-const getMyprofile: RequestHandler = catchAsync(async (req, res) => {
-  const id = req?.auth?._id;
+const updateMyProfile: RequestHandler = catchAsync(async (req, res) => {
+  const { ...updateData } = req.body;
+  const user = req.user;
 
-  // original service call
-  const result = await UserService.getSingleUser(id);
+  const result = await UserService.updateMyProfile(user, updateData);
 
-  // scallable response sending according to req
-  return sendResponse<UserType>(res, {
-    statusCode: httpStatus.FOUND,
+  sendResponse<IUser>(res, {
+    statusCode: httpStatus.OK,
     success: true,
-    message: 'User retrieved successfully',
-    meta: null,
+    message: "User's information updated successfully",
     data: result,
   });
 });
 
 export const UserController = {
-  getAllUsers,
-  getUser,
-  updateUserById,
-  deleteUserById,
-  getMyprofile,
-  updateMyprofile,
+  getAllUser,
+  getSingleUser,
+  updateUser,
+  deleteUser,
+  getMyProfile,
+  updateMyProfile,
 };

@@ -1,45 +1,23 @@
 import mongoose from 'mongoose';
-import { GenericErrorMessageType } from '../interface/error';
-import { GenericErrorResponseType } from '../interface/common';
-import httpStatus from 'http-status';
+import { IGenericErrorMessage } from '../interfaces/error';
+import { IGenericErrorResponse } from '../interfaces/common';
 
-/**
- * Reshaping the validation error from Mongoose into a generic error response.
- * @param error The Mongoose validation error.
- * @returns The generic error response with status code, message, and error messages.
- * @The_shape will be like:
- {
-  statusCode = statusCode;
-  message = message;
-  errorMessages = message
-    ? [
-        {
-          path: '',
-          message: error?.message,
-        },
-      ]
-    : []
-  };
- */
-const handleValidationError = (
-  error: mongoose.Error.ValidationError // Mongoose validation has it's own type
-): GenericErrorResponseType => {
-  // Extract the error messages from the validation error
-  const errors: GenericErrorMessageType[] = Object.values(error.errors).map(
-    (el: mongoose.Error.ValidatorError | mongoose.Error.CastError) => {
+// This function handles validation errors in Mongoose and returns a formatted error response
+export const handleValidationError = (
+  err: mongoose.Error.ValidationError
+): IGenericErrorResponse => {
+  const errors: IGenericErrorMessage[] = Object.values(err.errors).map(
+    (error: mongoose.Error.ValidatorError | mongoose.Error.CastError) => {
       return {
-        path: el?.path,
-        message: el?.message,
+        path: error?.path,
+        message: error?.message,
       };
     }
   );
-
-  const statusCode: number = httpStatus.BAD_REQUEST;
+  const statusCode = 400;
   return {
     statusCode,
-    message: 'Validation Error',
-    errorMessages: errors,
+    message: 'Validation error',
+    errorMessage: errors,
   };
 };
-
-export default handleValidationError;

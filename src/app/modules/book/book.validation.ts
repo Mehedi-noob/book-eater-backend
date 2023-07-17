@@ -1,34 +1,36 @@
 import { z } from 'zod';
-import { genre } from './book.constant';
-const createBookZodSchema = z.object({
+
+const createBookZodValidation = z.object({
   body: z.object({
-    title: z.string({
-      required_error: 'title is required',
-    }),
-    author: z.string({
-      required_error: 'author is required',
-    }),
-    genre: z.enum([...genre] as [string, ...string[]], {
-      required_error: 'location is required',
-    }),
-    publicationDate: z.string({
-      required_error: 'publication date is required',
-    }),
+    title: z.string(),
+    author: z.string(),
+    genre: z.string(),
+    publication_date: z.string(),
+    publication_year: z.string(),
+    image: z.string(),
   }),
 });
 
-const updateBookZodSchema = z.object({
+const updateBookZodValidation = z.object({
   body: z.object({
     title: z.string().optional(),
     author: z.string().optional(),
     genre: z.string().optional(),
-    publicationDate: z.string().optional(),
-    location: z.enum([...genre] as [string, ...string[]]).optional(),
-    seller: z.string().optional(),
+    publication_date: z.string().optional(),
+    image: z.string().optional(),
+    reviews: z
+      .array(
+        z.object({
+          userName: z.string(),
+          review: z.string(),
+          userEmail: z.string(),
+        })
+      )
+      .optional(),
   }),
 });
 
 export const BookValidation = {
-  createBookZodSchema,
-  updateBookZodSchema,
+  createBookZodValidation,
+  updateBookZodValidation,
 };

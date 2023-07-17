@@ -1,27 +1,23 @@
-/**
- * pick is a utility function that extracts specific keys from an object and returns a new object with only those keys.
- * It takes an object (obj) and an array of keys (keys) as parameters.
- * The function iterates over the keys array and checks if the object has the key.
- * If the object has the key, it adds the key-value pair to the final object.
- * The function returns the final object with the selected keys and their corresponding values.
- * @param obj The source object to pick keys from.
- * @param keys An array of keys to pick from the source object.
- * @returns A new object with only the selected keys and their corresponding values.
- */
-
-const pick = <T extends object, k extends keyof T>(
+// This function takes an object and an array of keys as input, and returns a new object
+// that contains only the properties that are specified in the array of keys.
+export const pick = <T extends object, K extends keyof T>(
+  // The object to be picked from.
   obj: T,
-  keys: k[]
+  // The array of keys to pick.
+  keys: K[]
 ): Partial<T> => {
+  // Create a new object that will contain the results.
   const finalObj: Partial<T> = {};
+
+  // Iterate over the keys array.
   for (const key of keys) {
+    // Check if the object has the property with the specified key.
     if (obj && Object.hasOwnProperty.call(obj, key)) {
+      // If the object has the property, add it to the new object.
       finalObj[key] = obj[key];
     }
   }
 
+  // Return the new object.
   return finalObj;
 };
-
-// Export the pick function as the default export
-export default pick;

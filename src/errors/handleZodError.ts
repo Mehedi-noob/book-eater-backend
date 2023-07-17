@@ -1,41 +1,29 @@
 import { ZodError, ZodIssue } from 'zod';
-import { GenericErrorResponseType } from '../interface/common';
-import { GenericErrorMessageType } from '../interface/error';
-import httpStatus from 'http-status';
+import { IGenericErrorResponse } from '../interfaces/common';
+import { IGenericErrorMessage } from '../interfaces/error';
 
-/**
- * Reshaping the validation error from Zod into a generic error response.
- * @param error The Zod error.
- * @returns The generic error response with status code, message, and error messages.
- {
-  statusCode = statusCode;
-  message = message;
-  errorMessages = message
-    ? [
-        {
-          path: '',
-          message: error?.message,
-        },
-      ]
-    : []
-  };
- */
-const handleZodError = (error: ZodError): GenericErrorResponseType => {
-  // Extract the error messages from the Zod error
-  const errors: GenericErrorMessageType[] = error.issues.map(
+// Function to handle Zod validation errors
+const handleZodError = (error: ZodError): IGenericErrorResponse => {
+  // Extract the individual issues from the ZodError
+  const errors: IGenericErrorMessage[] = error?.issues?.map(
     (issue: ZodIssue) => {
       return {
-        path: issue?.path[issue.path.length - 1],
-        message: issue?.message,
+        // Extract the last property in the path array as the path
+        path: issue?.path[issue?.path?.length - 1],
+        // Extract the error message
+        message: issue.message,
       };
     }
   );
 
-  const statusCode: number = httpStatus.BAD_REQUEST;
+  const statusCode = 400;
   return {
+    // Set the response status code
     statusCode,
-    message: 'Zod Error',
-    errorMessages: errors,
+    // Set the generic message for the error
+    message: 'Zod Validation Error',
+    // Set the detailed error messages
+    errorMessage: errors,
   };
 };
 

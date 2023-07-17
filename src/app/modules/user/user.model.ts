@@ -1,53 +1,71 @@
-import { Schema, model } from 'mongoose';
-import { UserType, UserModel } from './user.interface';
-import { role } from './user.constant';
+/* eslint-disable @typescript-eslint/no-this-alias */
+import mongoose from 'mongoose';
+import { IUser, UserModel } from './user.interface';
+import { role } from './user.constants';
+import bcrypt from 'bcrypt';
+import config from '../../../config';
+const { Schema } = mongoose;
 
-// schema definition for the users
-const userSchema = new Schema<UserType, UserModel>(
+const userSchema = new Schema<IUser, UserModel>(
   {
-    role: {
-      type: String,
-      required: [true, 'role is missing!'],
-      enum: {
-        values: role,
-        message: '{VALUE} is not matched',
-      },
-    },
-    name: {
-      type: {
-        firstName: {
-          type: String,
-          required: [true, 'first name is missing!'],
-        },
-        lastName: {
-          type: String,
-          required: [true, 'last name is missing!'],
-        },
-      },
-      required: [true, 'name is missing!'],
-    },
     password: {
       type: String,
-      unique: true,
-      required: [true, 'password is missing!'],
+      required: true,
+      select: 0,
+    },
+    role: {
+      type: String,
+      enum: role,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    phone: {
+      type: String,
+      required: true,
     },
     email: {
       type: String,
+      required: true,
       unique: true,
-      required: [true, 'phone number is missing!'],
-    },
-    address: {
-      type: String,
-      required: [true, 'address is missing!'],
     },
   },
   {
     timestamps: true,
     toJSON: {
       virtuals: true,
+      transform: function (doc, ret) {
+        delete ret.password; // Exclude password field from the response
+      },
     },
   }
 );
 
-// Create and export the User model based on the user schema
-export const User = model<UserType, UserModel>('User', userSchema);
+userSchema.methods.isUserExist = async function (
+  email: string
+): Promise<Pick<IUser, 'role' | 'password' | '_id'> | null> {
+  return await User.findOne(
+    { email: email },
+    { _id: 1, role: 1, password: 1 }
+  ).select('+password');
+};
+
+userSchema.methods.isPasswordMatch = function (
+  givenPassword: string,
+  savedPassword: string
+): Promise<boolean> {
+  return bcrypt.compare(givenPassword, savedPassword);
+};
+
+userSchema.pre('save', async function (next) {
+  // hash the password before saving into the database
+  const user = this;
+  user.password = await bcrypt.hash(
+    user.password,
+    Number(config.bcrypt_salt_rounds)
+  );
+  next();
+});
+
+export const User = mongoose.model<IUser, UserModel>('User', userSchema);

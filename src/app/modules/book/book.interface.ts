@@ -1,30 +1,31 @@
-import { Model, Types } from 'mongoose';
-import { UserType } from '../user/user.interface';
+import { Model } from 'mongoose';
 
-export type BookType = {
-  title: string;
-  author: string;
-  price: number;
-  genre:
-    | 'Fantasy'
-    | 'Xianxia'
-    | 'Horror'
-    | 'Psychological'
-    | 'Action'
-    | 'Thriller'
-    | 'Sci'
-    | 'Comedy';
-  publicationDate: string;
-  seller: Types.ObjectId | UserType;
+export type IReview = {
+  userName: string;
+  review: string;
+  userEmail: string;
 };
 
-export type BookModel = Model<BookType, Record<string, unknown>>;
+export type IBook = {
+  title: string;
+  author: string;
+  genre: string;
+  publication_date: string;
+  publication_year: string;
+  image: string;
+  creator: string;
+  reviews?: IReview[];
+};
 
-export type BookFilterType = {
+export type BookModel = Model<IBook, Record<string, unknown>>;
+
+export type IBookFilter = {
   searchTerm?: string;
-  price?: string;
   location?: string;
-  category?: string;
+  price?: string;
+  age?: number;
+  name?: string;
   breed?: string;
-  seller?: string;
+  weight?: number;
+  category?: string;
 };

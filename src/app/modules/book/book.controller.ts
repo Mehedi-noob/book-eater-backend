@@ -1,128 +1,101 @@
 import { RequestHandler } from 'express';
-import httpStatus from 'http-status';
-import sendResponse from '../../../shared/sendResponse';
 import catchAsync from '../../../shared/catchAsync';
-import { BookType } from './book.interface';
-import { BookService } from './book.services';
-import pick from '../../../shared/pick';
-import { bookFilterableField } from './book.constant';
+import sendResponse from '../../../shared/sendResponse';
+import httpStatus from 'http-status';
+import { BookService } from './book.service';
+import { pick } from '../../../shared/pick';
 import { paginationFields } from '../../../constants/pagination';
-import ApiError from '../../../errors/ApiError';
-import { UserService } from '../user/user.services';
-import { User } from '../user/user.model';
+import { JwtPayload } from 'jsonwebtoken';
+import { IBook } from './book.interface';
+import { bookFilterableFields } from './book.constants';
 
-const createNewBookController: RequestHandler = catchAsync(async (req, res) => {
-  const { ...bookData } = req.body;
-  bookData.seller = req?.auth?._id;
-  const result = await BookService.createBook(bookData);
+const createBook: RequestHandler = catchAsync(async (req, res) => {
+  const { ...BookData } = req.body;
+  const result = await BookService.createBook(BookData);
 
-  return sendResponse<BookType>(res, {
-    statusCode: httpStatus.CREATED,
+  sendResponse<IBook>(res, {
+    statusCode: httpStatus.OK,
     success: true,
     message: 'Book created successfully',
-    meta: null,
     data: result,
   });
 });
 
-const getAllBooksController: RequestHandler = catchAsync(async (req, res) => {
-  // for filtering according to query
-  const filters = pick(req.query, bookFilterableField);
-
-  // pagination
+const getAllBooks: RequestHandler = catchAsync(async (req, res) => {
+  const filters = pick(req.query, bookFilterableFields);
   const paginationOptions = pick(req.query, paginationFields);
 
-  // original service call
   const result = await BookService.getAllBooks(filters, paginationOptions);
-
-  // sending response according to filter and pagination
-  return sendResponse<BookType[]>(res, {
-    statusCode: httpStatus.FOUND,
+  sendResponse<IBook[]>(res, {
+    statusCode: httpStatus.OK,
     success: true,
-    message: 'Books retrieved successfully',
+    message: 'Books retrived successfully',
     meta: result.meta,
     data: result.data,
   });
 });
 
-const getBookByIdController: RequestHandler = catchAsync(async (req, res) => {
+const getSingleBook: RequestHandler = catchAsync(async (req, res) => {
   const id = req.params.id;
-
-  // original service call
   const result = await BookService.getSingleBook(id);
 
-  // scallable response sending according to req
-  return sendResponse<BookType>(res, {
-    statusCode: httpStatus.FOUND,
+  sendResponse<IBook>(res, {
+    statusCode: httpStatus.OK,
     success: true,
-    message: 'Book retrieved successfully',
-    meta: null,
+    message: 'Book retrived successfully',
     data: result,
   });
 });
 
-const updateBookByIdController: RequestHandler = catchAsync(
-  async (req, res) => {
-    // data retrieval according to req
-    const id = req.params.id;
-    const updatedData = req.body;
+const deleteBook: RequestHandler = catchAsync(async (req, res) => {
+  const id = req.params.id;
+  const user: JwtPayload | null = req?.user;
 
-    // original service call
-    if (req?.auth?.role === 'seller') {
-      // get the BookInfo
-      const BookInfo = await BookService.getSingleBook(id);
-      console.log('book', BookInfo);
-      console.log('author', req.auth._id);
+  const result = await BookService.deleteBook(id, user);
 
-      if (BookInfo?.seller.toString() !== req?.auth?._id) {
-        throw new ApiError(httpStatus.FORBIDDEN, 'You are not the seller');
-      }
-    }
+  sendResponse<IBook>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Book deleted successfully',
+    data: result,
+  });
+});
 
-    const result = await BookService.updateSingleBook(id, updatedData);
-    // scallable response sending according to req
-    return sendResponse<BookType>(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: 'Book updated successfully',
-      meta: null,
-      data: result,
-    });
-  }
-);
+const updateBook: RequestHandler = catchAsync(async (req, res) => {
+  const id = req.params.id;
+  const updateData = req.body;
 
-const deleteBookByIdController: RequestHandler = catchAsync(
-  async (req, res) => {
-    // data retrieval according to req
-    const id = req.params.id;
+  const user: JwtPayload | null = req?.user;
 
-    if (req?.auth?.role === 'seller') {
-      // get the BookInfo
-      const BookInfo = await BookService.getSingleBook(id);
+  const result = await BookService.updateBook(id, updateData, user);
 
-      if (BookInfo?.seller.toString() !== req?.auth?._id) {
-        throw new ApiError(httpStatus.FORBIDDEN, 'You are not the seller');
-      }
-    }
+  sendResponse<IBook>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Book updated successfully',
+    data: result,
+  });
+});
 
-    // original service call
-    const result = await BookService.deleteSingleBook(id);
+export const addReview: RequestHandler = catchAsync(async (req, res) => {
+  const id = req.params.id;
+  const updateData = req.body;
 
-    // scallable response sending according to req
-    return sendResponse<BookType>(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: 'Book delete successfully',
-      meta: null,
-      data: result,
-    });
-  }
-);
+  const result = await BookService.addReview(id, updateData);
+
+  sendResponse<IBook>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Review added successfully',
+    data: result,
+  });
+});
 
 export const BookController = {
-  createNewBookController,
-  getAllBooksController,
-  getBookByIdController,
-  updateBookByIdController,
-  deleteBookByIdController,
+  createBook,
+  getAllBooks,
+  getSingleBook,
+  deleteBook,
+  updateBook,
+  addReview,
 };

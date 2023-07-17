@@ -1,34 +1,53 @@
-import { Schema, model } from 'mongoose';
-import { genre } from './book.constant';
-import { BookModel, BookType } from './book.interface';
+import mongoose from 'mongoose';
+import { BookModel, IBook } from './book.interface';
+const { Schema } = mongoose;
 
-const bookSchema = new Schema<BookType, BookModel>(
+const bookSchema = new Schema(
   {
     title: {
       type: String,
-      required: [true, 'name is missing!'],
+      required: true,
     },
     author: {
       type: String,
-      required: [true, 'Author is missing!'],
-    },
-    publicationDate: {
-      type: String,
-      required: [true, 'Publication date is missing!'],
+      required: true,
     },
     genre: {
       type: String,
-      enum: {
-        values: genre,
-        message: '{VALUE} is not matched',
+      required: true,
+    },
+    publication_date: {
+      type: Date,
+      required: true,
+    },
+    publication_year: {
+      type: String,
+      required: true,
+    },
+    image: {
+      type: String,
+      required: true,
+    },
+    creator: {
+      type: String,
+      required: true,
+    },
+    reviews: [
+      {
+        userName: {
+          type: String,
+          required: true,
+        },
+        review: {
+          type: String,
+          required: true,
+        },
+        userEmail: {
+          type: String,
+          required: true,
+        },
       },
-      required: [true, 'genre is missing!'],
-    },
-    seller: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'seller is missing!'],
-    },
+    ],
   },
   {
     timestamps: true,
@@ -38,4 +57,4 @@ const bookSchema = new Schema<BookType, BookModel>(
   }
 );
 
-export const Book = model<BookType, BookModel>('Book', bookSchema);
+export const Book = mongoose.model<IBook, BookModel>('Book', bookSchema);

@@ -1,30 +1,32 @@
-import cors from 'cors';
 import express, { Application, Request, Response } from 'express';
-import globalErrorHandler from './app/middleware/globalErrorHandler';
+import cors from 'cors';
+import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import httpStatus from 'http-status';
-import routes from './app/routes';
+import router from './app/router';
+import cookieParser from 'cookie-parser';
+const app: Application = express();
 
-const app: Application = express(); // Create an instance of the Express application
+// cors
+app.use(cors());
 
-// Application Middleware
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Parse JSON request bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
+// parser
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// Central Routes
-app.use('/api/v1', routes);
+// aplication routes
+app.use('/api/v1', router);
 
-// Welcome api
-app.get('/', async (req: Request, res: Response) => {
-  res.status(200).json({
-    message: 'Welcome To The Book Eater',
-  });
+app.get('/', (req: Request, res: Response) => {
+  res.send({ message: 'Hogwarts Bookshelf is open for you' });
 });
 
-// ErrorRoute for undefined apis
+// global error handler
+app.use(globalErrorHandler);
+
+// Handle not found
 app.use((req: Request, res: Response) => {
-  // Return a JSON response with the appropriate status code and error message
-  return res.status(httpStatus.NOT_FOUND).json({
+  res.status(httpStatus.NOT_FOUND).json({
     success: false,
     message: 'API not found',
     errorMessages: [
@@ -35,9 +37,5 @@ app.use((req: Request, res: Response) => {
     ],
   });
 });
-
-// Global Error Handler
-// Middleware to handle errors globally and send standardized error responses
-app.use(globalErrorHandler);
 
 export default app;
